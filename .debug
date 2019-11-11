@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExtensionList>
+    <Extension Id="com.inner-joystick.panel">
+        <HostList>
+            <Host Name="AEFT" Port="6455" />
+        </HostList>
+    </Extension>
+</ExtensionList>
