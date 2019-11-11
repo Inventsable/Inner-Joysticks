@@ -1,7 +1,9 @@
 <template>
-  <q-page class="main-page">
-    <sadface />
-    <span style="width: 100%;" class="text-center q-pt-xl">I have no content yet</span>
+  <q-page>
+    <div class="absolute-center">
+      <sadface />
+      <span style="width: 100%;" class="text-center q-pt-xl">I have no content yet</span>
+    </div>
   </q-page>
 </template>
 
@@ -19,5 +21,9 @@ export default {
   justify-content: center;
   align-items: flex-start;
   flex-wrap: wrap;
+}
+.text-center {
+  display: flex;
+  justify-content: center;
 }
 </style>

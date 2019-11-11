@@ -2,10 +2,8 @@
   <q-layout view="hHh lpR fFf">
     <q-header elevated>
       <q-bar>
-        <q-icon
-          :name="app.hasActiveJoystick ? 'mdi-google-controller' : 'mdi-google-controller-off'"
-        />
-        <div class="toolbar-title">{{activeJoystick || 'No joystick'}}</div>
+        <q-icon :name="currentActiveIcon" />
+        <div class="toolbar-title">{{titleAnno}}</div>
         <q-space />
         <div
           v-if="app.hasActiveJoystick"
@@ -60,7 +58,9 @@
           :icon="sizeLock ? 'mdi-lock' : 'mdi-lock-open'"
           @click="toggleSizeLock"
         >
-          <tooltipper :msg="sizeLock ? 'Joystick size locked' : 'Joystick size not locked'" />
+          <tooltipper
+            :msg="sizeLock ? `${properControllerName} size locked` : `${properControllerName} size not locked`"
+          />
         </q-btn>
         <q-space></q-space>
         <q-btn-dropdown
@@ -128,10 +128,12 @@
         <q-btn
           dense
           flat
-          @click="toggleHideJoysticks"
-          :icon="`mdi-eye${hideJoysticks ? '-off' : ''}`"
+          @click="toggleHideController"
+          :icon="`mdi-eye${isHiddenController ? '-off' : ''}`"
         >
-          <tooltipper :msg="hideJoysticks ? `Auto-hide comp joysticks` : `Don't hide joysticks`" />
+          <tooltipper
+            :msg="isHiddenController ? `Auto-hide comp ${currentControllerName}s` : `Don't hide ${currentControllerName}s`"
+          />
         </q-btn>
         <q-btn dense flat @click="toggleFlexDirection" :icon="currentDirectionIcon">
           <tooltipper :msg="`Flex is ${flexDirection}`" />
@@ -179,6 +181,17 @@ export default {
     activeJoystick() {
       return this.app.activeJoystick.name;
     },
+    activeSlider() {
+      return this.app.activeSlider.name;
+    },
+    activeController() {
+      if (this.$route.name == "home") return false;
+      else if (this.$route.name == "Joystick" && this.app.hasActiveJoystick)
+        return this.app.activeJoystick.name;
+      else if (this.$route.name == "Slider" && this.app.hasActiveSlider)
+        return this.app.activeSlider.name;
+      else return false;
+    },
     extVersion() {
       return getExtVersion();
     },
@@ -200,6 +213,36 @@ export default {
       if (/row/.test(this.settings.flexDirection))
         return "mdi-border-horizontal";
       else return "mdi-border-vertical";
+    },
+    currentActiveIcon() {
+      if (this.$route.name == "home") return "home";
+      else if (this.$route.name == "Joystick")
+        return this.app.hasActiveJoystick
+          ? "mdi-google-controller"
+          : "mdi-google-controller-off";
+      else if (this.$route.name == "Slider")
+        return this.app.hasActiveSlider ? "mdi-tune" : "mdi-tune";
+    },
+    currentControllerName() {
+      return this.$route.name.toLowerCase();
+    },
+    properControllerName() {
+      return this.currentControllerName.replace(/^\w/, c => c.toUpperCase());
+    },
+    titleAnno() {
+      if (this.$route.name !== "home") {
+        return this.activeController
+          ? this.activeController
+          : `No ${this.currentControllerName}`;
+      } else {
+        return "Home";
+      }
+    },
+    isHiddenController() {
+      if (this.$route.name == "home") return false;
+      else if (this.$route.name == "Joystick")
+        return this.settings.hideJoysticks;
+      else if (this.$route.name == "Slider") return this.settings.hideSliders;
     },
     size: {
       get() {
@@ -246,6 +289,9 @@ export default {
     },
     hideJoysticks() {
       return this.settings.hideJoysticks;
+    },
+    hideSliders() {
+      return this.settings.hideSliders;
     }
   },
   methods: {
@@ -258,8 +304,16 @@ export default {
       "toggleSizeLock",
       "toggleFlexReverse",
       "toggleFlexDirection",
-      "toggleHideJoysticks"
+      "toggleHideJoysticks",
+      "toggleHideSliders"
     ]),
+    toggleHideController() {
+      if (this.$route.name == "home") return null;
+      else if (this.$route.name == "Joystick") this.toggleHideJoysticks();
+      else if (this.$route.name == "Slider") {
+        this.toggleHideSlider();
+      }
+    },
     isActiveStyle(state) {
       return `
         color: var(--color-${state ? "selection" : "default"});

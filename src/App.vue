@@ -31,7 +31,12 @@ export default {
     identity: null,
     menus: null,
     hasActiveJoystick: false,
+    hasActiveSlider: false,
     alt: false,
+    activeSlider: {
+      name: null,
+      value: null
+    },
     activeJoystick: {
       name: null,
       x: null,

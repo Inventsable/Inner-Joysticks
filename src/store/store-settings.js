@@ -9,7 +9,8 @@ const state = {
     alignHorizontal: "flex-start",
     flexDirection: "row",
     flexReverse: false,
-    hideJoysticks: true
+    hideJoysticks: true,
+    hideSliders: true
   }
 };
 
@@ -29,12 +30,14 @@ const mutations = {
   setHideJoysticks(state, value) {
     state.settings.hideJoysticks = value;
   },
+  setHideSliders(state, value) {
+    state.settings.hideJoysticks = value;
+  },
   setFlexDirection(state, value) {
     state.settings.flexDirection = value;
   },
   setFlexReverse(state, value) {
     state.settings.flexReverse = value;
-    console.log(state.settings.flexReverse);
   },
   setSettings(state, value) {
     Object.assign(state.settings, value);
@@ -65,7 +68,10 @@ const actions = {
   },
   toggleHideJoysticks({ state, commit, dispatch }) {
     commit("setHideJoysticks", !state.settings.hideJoysticks);
-    console.log(state.settings.hideJoysticks);
+    dispatch("saveSettings");
+  },
+  toggleHideSliders({ state, commit, dispatch }) {
+    commit("setHideSliders", !state.settings.hideSliders);
     dispatch("saveSettings");
   },
   toggleFlexDirection({ state, commit, dispatch }) {
