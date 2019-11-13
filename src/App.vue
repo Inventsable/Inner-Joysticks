@@ -33,6 +33,8 @@ export default {
     hasActiveJoystick: false,
     hasActiveSlider: false,
     alt: false,
+    altLocked: false,
+    tutorialStep: 1,
     activeSlider: {
       name: null,
       value: null
@@ -40,7 +42,8 @@ export default {
     activeJoystick: {
       name: null,
       x: null,
-      y: null
+      y: null,
+      dragging: false
     },
     // optional
     modal: null,
@@ -63,6 +66,10 @@ export default {
     // If extensionID has "modal" we know it's not the panel:
     notModal() {
       return this.identity ? !/modal/.test(this.identity.extID) : null;
+    },
+    showHeader() {
+      if (this.$route.name !== "home") return true;
+      else return this.tutorialStep > 1;
     }
   },
   mounted() {
@@ -101,17 +108,18 @@ export default {
     }
     window.addEventListener("keydown", evt => {
       if (evt.shiftKey) {
-        this.alt = true;
+        if (!this.altLocked) this.alt = true;
       }
     });
 
     window.addEventListener("keyup", evt => {
       if (!evt.shiftKey) {
-        this.alt = false;
+        if (!this.altLocked) this.alt = false;
       }
     });
 
     this.loadUniversalScripts();
+
     //
     this.$q.notify.setDefaults({
       timeout: 2500,

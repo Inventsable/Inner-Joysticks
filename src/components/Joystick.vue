@@ -144,8 +144,14 @@ export default {
     storeSize() {
       return this.settings.size;
     },
+    storeSizeLock() {
+      return this.settings.sizeLock;
+    },
     alt() {
       return this.app.alt;
+    },
+    hasDrag() {
+      return this.app.activeJoystick.dragging;
     },
     currentIconSize() {
       if (this.settings.size > 80) return "xl";
@@ -157,7 +163,29 @@ export default {
   },
   watch: {
     storeSize(val) {
-      if (!this.settings.sizeLock) this.calculateSize();
+      if (!this.settings.sizeLock) {
+        this.calculateSize();
+      }
+    },
+    hasDrag(val) {
+      if (this.name !== this.app.activeJoystick.name && this.isHover) {
+        console.log(`${val} ? ${this.app.activeJoystick.name} : ${this.name}`);
+        this.active = true;
+      }
+    },
+    active(state) {
+      if (state) {
+        this.app.hasActiveJoystick = true;
+        this.app.activeJoystick.x = this.joyCoords.x;
+        this.app.activeJoystick.y = this.joyCoords.y;
+        this.app.activeJoystick.name = this.name;
+        this.app.activeJoystick.dragging = this.isDragging;
+      }
+    },
+    storeSizeLock(val) {
+      if (!val) {
+        this.calculateSize();
+      }
     },
     joyPos(x) {
       this.getNewJoyPos();
@@ -165,18 +193,16 @@ export default {
     isDragging(state) {
       if (state) {
         this.active = true;
-        this.app.activeJoystick = {
-          name: this.name,
-          x: this.joyCoords.x,
-          y: this.joyCoords.y,
-          dragging: this.isDragging
-        };
-        this.app.hasActiveJoystick = true;
         this.showTooltip = state;
       } else {
         if (!this.isHover) {
           this.active = false;
+          this.app.activeJoystick.dragging = false;
           this.app.hasActiveJoystick = false;
+        } else {
+          if (this.app.activeJoystick.name == this.name) {
+            this.app.activeJoystick.dragging = false;
+          }
         }
       }
     }
@@ -190,33 +216,45 @@ export default {
   },
   methods: {
     activateJoystick(evt) {
+      this.isHover = true;
       if (evt.type == "mouseenter" && !this.app.activeJoystick.dragging) {
-        this.isHover = true;
-        this.active = true;
-        this.app.activeJoystick = {
-          name: this.name,
-          x: this.joyCoords.x,
-          y: this.joyCoords.y,
-          dragging: this.isDragging
-        };
+        if (
+          !this.app.activeJoystick.name &&
+          !this.app.activeJoystick.dragging
+        ) {
+          this.isHover = true;
+          this.active = true;
+        }
       } else if (evt.type == "mouseenter") {
-        this.isHover = true;
-        this.active = true;
-        this.app.activeJoystick.x = this.joyCoords.x;
-        this.app.activeJoystick.y = this.joyCoords.y;
+        if (this.app.activeJoystick.name == this.name) {
+          this.isHover = true;
+          this.active = true;
+        } else {
+          if (!this.app.activeJoystick.dragging) {
+            this.isHover = true;
+            this.active = true;
+          }
+        }
       }
       this.app.hasActiveJoystick = true;
     },
     deactivateJoystick() {
-      this.active = false;
       this.isHover = false;
-      this.app.activeJoystick = {
-        name: null,
-        x: null,
-        y: null,
-        dragging: false
-      };
-      this.app.hasActiveJoystick = false;
+      if (!this.app.activeJoystick.dragging) {
+        this.active = false;
+        this.isHover = false;
+        this.app.activeJoystick = {
+          name: null,
+          x: null,
+          y: null,
+          dragging: false
+        };
+        this.app.hasActiveJoystick = false;
+      } else {
+        if (!this.isHover) {
+          this.active = false;
+        }
+      }
     },
     init(pos) {
       this.showController = false;
@@ -322,6 +360,7 @@ export default {
         background-color: var(--color-${
           this.active ? "selection" : "checkbox-disabled"
         });
+        cursor: grab${this.isDragging ? "bing" : ""};
       `;
       // background-color: ${this.background || "#ff0000"}
     },
@@ -341,6 +380,7 @@ export default {
         z-index: 10;
         left: ${this.realCoords.x}px;
         top: ${this.realCoords.y}px;
+        cursor: grab${this.isDragging ? "bing" : ""};
         background-color: #fff`;
     },
     handlePan({ evt, ...info }) {
@@ -423,6 +463,7 @@ export default {
   width: 100%
   height: 100%
 
+
 .custom-area
   position: absolute
   width: 50%
@@ -431,9 +472,9 @@ export default {
   transition: background-color 200ms var(--quint) 20ms;
 
 .custom-area:after
-  content: "";
-  display: block;
-  padding-bottom: 100%;
+  content: ""
+  display: block
+  padding-bottom: 100%
 
 .custom-info
   font-size: 12px

@@ -1,33 +1,80 @@
 var activeItem = getActiveComp();
 
-// Need some manner of finding Joysticks and ensuring their id/name/index is correct
-//
-//   If done only in id, this would mean users will accidentally alter other layers
-//   if they recently created new layers.
-//
-//   Joystick should ensure that the layer is indeed a joystick prior to setting value
-//   This would be heavy to do, may want to rely on static layer count discrimination
-//
-//   Could settle for layer.nullLayer [BOOL] as shorthand check
-//
-//   If layer count is the same, assume this is safe. If not, doublecheck current layer.
-//
-// Need to pass in [x, y] data on checkForJoysticks() to return initial value
-//
 function init() {
   app.activeViewer.setActive();
   activeItem = getActiveComp();
-  // var check = checkForJoysticks();
-
-  // testJoystick([7, 5, 1], [200, -200]);
-
   return true;
+}
+
+function scanStringForSliderData(data) {
+  if (/BEGIN\sSLIDER\sCODE/gm.test(data)) {
+    let sliderControls = [];
+    let sliderNameRX = /var\scontrl\s\=\sthisComp\.layer\(\"(.*)\"\)\;/gm;
+    if (sliderNameRX.test(data)) {
+      let sliderName = data.match(sliderNameRX)[1];
+      let sliderControllerRX = /var\scontrlCurVal\d{1,}\s\=\scontrl\(\"(.*)\"\)\((\d{1,})\)/gm;
+      if (sliderControllerRX.test(data)) {
+        let controllerMatches = data.match(sliderControllerRX);
+        console.log("Matching:");
+        console.log(controllerMatches);
+        // controllerMatches.forEach(match => {
+        //   let slider = {
+        //     layer: sliderName,
+        //     prefix: match[0],
+        //     ind: match[1],
+        //     suffix: "ADBE Slider Control-0001"
+        //   };
+        //   sliderControls.push(slider);
+        // });
+      } else {
+        console.log(`No match for controllers`);
+      }
+    } else {
+      console.log(`No match for name`);
+    }
+  } else {
+    return false;
+  }
+}
+
+function checkForSliders(config) {
+  // This is wrong. Slider prop data could come from any prop, need to fully recurse.
+
+  activeItem = getActiveComp();
+  console.log(`Checking ${activeItem.name} for sliders`);
+  config = JSON.parse(config);
+  var joysticks = [];
+  if (
+    activeItem != null &&
+    activeItem instanceof CompItem &&
+    activeItem.layers.length > 0
+  ) {
+    for (var i = 1; i <= activeItem.layers.length; i++) {
+      var layer = activeItem.layers[i];
+      console.log(`Layer name: ${layer.name}`);
+      for (var fx = 1; fx <= layer.numProperties; fx++) {
+        var prop = layer.property(fx);
+        for (var fx2 = 1; fx2 <= prop.numProperties; fx2++) {
+          var prop2 = prop.property(fx2);
+          // console.log(prop2.name);
+          if (prop2.name == "Position" && !/text/i.test(prop.matchName)) {
+            if (prop2.expression) {
+              console.log(prop2.expression);
+              let check = scanStringForSliderData(prop2.expression);
+              console.log(check);
+            } else {
+              console.log("No expression");
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 function checkForJoysticks(config) {
   activeItem = getActiveComp();
   config = JSON.parse(config);
-  var result = 0;
   var joysticks = [];
   if (
     activeItem != null &&
@@ -53,7 +100,6 @@ function checkForJoysticks(config) {
         } else if (prop.name == "Contents") {
           let check = checkifJoystickBounds(prop);
           if (check) {
-            // console.log(`Found Bounds at ${layer.name}`);
             if (config.hideJoysticks) layer.enabled = false;
           }
         }
@@ -77,7 +123,11 @@ function checkifJoystickBounds(prop) {
               for (var nnnn = 1; nnnn <= nnnprop.numProperties; nnnn++) {
                 var nnnnprop = nnnprop.property(nnnn);
                 if (nnnnprop.expression) {
-                  check = /joystickLimit/gm.test(nnnnprop.expression);
+                  // check = /joystickLimit/gm.test(nnnnprop.expression);
+                  check = /\/{5}begin\slimit\scode\/{6}/gim.test(
+                    nnnnprop.expression
+                  );
+                  // console.log(nnnnprop.expression);
                 }
               }
             }
@@ -89,11 +139,24 @@ function checkifJoystickBounds(prop) {
 }
 
 function setJoystick(data) {
+  // This should double-check comp name or layer count before sending
+  // Otherwise this will throw an error or move the wrong layer
+
   data = JSON.parse(data);
   let layer = activeItem.layer(data.name);
-  let newpos = [data.x, data.y, 0];
-  let pos = layer.position;
-  pos.setValue(newpos);
+  if (layer) {
+    let newpos = [data.x, data.y, 0];
+    let pos = layer.position;
+
+    if (pos.numKeys < 1) {
+      pos.setValue(newpos);
+    } else {
+      // console.log(activeItem.time);
+      pos.setValueAtTime(activeItem.time, newpos);
+    }
+  } else {
+    // Send CSEVent telling the panel there's been an error, layer name not found.
+  }
 }
 
 // Thanks @UQg

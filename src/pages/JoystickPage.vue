@@ -1,6 +1,19 @@
 <template>
   <q-pull-to-refresh :disable="app.hasActiveJoystick" @refresh="refresh">
-    <q-page>
+    <q-page v-if="!launched">
+      <div class="q-mb-md">
+        <slottie />
+      </div>
+      <div class="text-h6 flex flex-center" style="width: 100%;">Refresh to launch</div>
+      <div class="q-pa-md">
+        <span>
+          Click and drag down any where in the panel to refresh your joysticks.
+          The panel can't read when you add new joysticks or switch comps, so
+          you'll need to refresh for them to appear.
+        </span>
+      </div>
+    </q-page>
+    <q-page v-else>
       <!-- <q-scroll-area class="q-scroll-area" style="width: 100%; height: 100%;"> -->
       <div v-if="!hasError" :style="getArcadeStyle()">
         <div
@@ -35,7 +48,8 @@ export default {
   components: {
     "quasar-logo": require("src/assets/quasarLogo.vue").default,
     joystick: require("src/components/Joystick.vue").default,
-    sadface: require("src/assets/sadLogo.vue").default
+    sadface: require("src/assets/sadLogo.vue").default,
+    slottie: require("src/components/slottie.vue").default
   },
   computed: {
     ...mapGetters("settings", ["settings"]),
@@ -62,20 +76,21 @@ export default {
   },
   watch: {
     size(num) {
-      console.log(num);
+      // console.log(num);
     }
   },
   data: () => ({
     canResize: true,
     canDrag: true,
     joysticks: [],
+    launched: false,
     isMounted: false,
     hasError: false
   }),
   async mounted() {
     await this.app.runCS("init()");
-    let result = await this.scanForJoysticks();
-    this.initJoysticks();
+    // let result = await this.scanForJoysticks();
+    // this.initJoysticks();
   },
   methods: {
     ...mapActions("settings", ["setSize"]),
@@ -128,9 +143,14 @@ export default {
       }
     },
     refresh(done) {
+      // if (!this.launch) {
+      // this.launch = true;
+      // } else {
+      this.launched = true;
       this.refreshJoysticks().then(() => {
         done();
       });
+      // }
     },
     async updateCoords(data) {
       this.app.activeJoystick.x = data.x;

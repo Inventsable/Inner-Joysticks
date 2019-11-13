@@ -6,10 +6,15 @@
         <q-list class="q-pt-lg" dense>
           <q-item v-for="(slider, i) in sliders" :key="i">
             <q-item-section side>
-              <q-item-label>{{slider.name}}</q-item-label>
+              <q-item-label>{{ slider.name }}</q-item-label>
             </q-item-section>
             <q-item-section>
-              <q-slider v-model="slider.value" :min="slider.min" :max="slider.max" color="primary" />
+              <q-slider
+                v-model="slider.value"
+                :min="slider.min"
+                :max="slider.max"
+                color="primary"
+              />
             </q-item-section>
             <q-item-section side>
               <q-input
@@ -29,7 +34,9 @@
       <!-- </q-scroll-area> -->
       <div v-if="hasError" class="centered q-pt-lg">
         <sadface />
-        <span style="width: 100%;" class="text-center q-pt-xl">No joysticks detected. Please refresh</span>
+        <span style="width: 100%;" class="text-center q-pt-xl"
+          >No joysticks detected. Please refresh</span
+        >
       </div>
     </q-page>
   </q-pull-to-refresh>
@@ -120,7 +127,7 @@ export default {
     async refreshSliders() {
       this.hasError = false;
       this.app.loading = true;
-      this.joysticks = [];
+      this.sliders = [];
       let result = await this.scanForSliders();
       // if (!this.hasError) this.initJoysticks();
       this.app.loading = false;
@@ -154,10 +161,10 @@ export default {
     //   });
     // },
     async scanForSliders() {
-      // let result = await this.app.runCS(
-      //   `checkForJoysticks('${JSON.stringify(this.config)}')`
-      // );
       console.log("Scan here");
+      let result = await this.app.runCS(
+        `checkForSliders('${JSON.stringify(this.config)}')`
+      );
       // let data = JSON.parse(result);
       // if (result.length) {
       //   return this.createJoysticks(result);

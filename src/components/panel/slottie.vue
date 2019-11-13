@@ -69,7 +69,7 @@ svg {
 }
 
 .slottie-animation {
-  max-width: 200px;
+  max-width: 100vw;
 }
 
 .anim-main {

@@ -19,8 +19,8 @@
     <Extension Id="com.inner-joystick.panel">
       <DispatchInfo>
         <Resources>
-          <MainPath>./src/index-dev.html</MainPath>
-          <!-- <MainPath>./dist/spa/index.html</MainPath> -->
+          <!-- <MainPath>./src/index-dev.html</MainPath> -->
+          <MainPath>./dist/spa/index.html</MainPath>
           <CEFCommandLine>
             <Parameter>--enable-nodejs</Parameter>
             <Parameter>--mixed-context</Parameter>
@@ -53,8 +53,8 @@
     <Extension Id="com.inner-joystick.modal">
       <DispatchInfo>
         <Resources>
-          <MainPath>./src/index-dev.html</MainPath>
-          <!-- <MainPath>./dist/spa/index.html</MainPath> -->
+          <!-- <MainPath>./src/index-dev.html</MainPath> -->
+          <MainPath>./dist/spa/index.html</MainPath>
           <CEFCommandLine>
             <Parameter>--enable-nodejs</Parameter>
             <Parameter>--mixed-context</Parameter>

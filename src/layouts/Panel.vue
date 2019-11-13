@@ -1,28 +1,31 @@
 <template>
   <q-layout view="hHh lpR fFf">
-    <q-header elevated>
+    <q-header v-show="showHeader" elevated>
       <q-bar>
         <q-icon :name="currentActiveIcon" />
-        <div class="toolbar-title">{{titleAnno}}</div>
+        <div class="toolbar-title">{{ titleAnno }}</div>
         <q-space />
         <div
           v-if="app.hasActiveJoystick"
-          class="q-pl-sm"
+          class="q-px-sm"
           style="display: flex; justify-content: center"
         >
-          <span>{{app.hasActiveJoystick ? '[' : ''}}</span>
-          <span
-            class="centered"
-            style="width: 50px"
-          >{{app.hasActiveJoystick ? `${app.activeJoystick.x}` : ''}}</span>
-          <span>{{app.hasActiveJoystick ? '|' : ''}}</span>
-          <span
-            style="width: 50px"
-            class="centered"
-          >{{app.hasActiveJoystick ? `${app.activeJoystick.y}` : ''}}</span>
-          <span>{{app.hasActiveJoystick ? ']' : ''}}</span>
+          <span>{{ app.hasActiveJoystick ? "[" : "" }}</span>
+          <span class="centered" style="width: 50px">
+            {{
+            app.hasActiveJoystick ? `${app.activeJoystick.x}` : ""
+            }}
+          </span>
+          <span>{{ app.hasActiveJoystick ? "|" : "" }}</span>
+          <span style="width: 50px" class="centered">
+            {{
+            app.hasActiveJoystick ? `${app.activeJoystick.y}` : ""
+            }}
+          </span>
+          <span>{{ app.hasActiveJoystick ? "]" : "" }}</span>
         </div>
-        <q-btn
+        <!-- <q-btn
+          v-if="showHome"
           dense
           flat
           :to="{ name: 'Home' }"
@@ -30,6 +33,7 @@
           :style="isActiveStyle($route.name == 'Home')"
         />
         <q-btn
+          v-if="showJoy"
           dense
           flat
           :to="{ name: 'Joystick' }"
@@ -37,20 +41,23 @@
           :style="isActiveStyle($route.name == 'Joystick')"
         />
         <q-btn
+          v-if="showSlider"
+          :disable="true"
           dense
           flat
           :to="{ name: 'Slider' }"
           icon="mdi-tune"
           :style="isActiveStyle($route.name == 'Slider')"
-        />
+        />-->
       </q-bar>
     </q-header>
 
     <q-footer>
       <q-bar>
         <div class="q-pl-sm" style="width: 30%;">
-          <q-slider :readonly="sizeLock" v-model="size" :min="20" :max="100" label />
+          <q-slider :readonly="sizeLock" v-model="size" :min="20" :max="100" />
         </div>
+        <span class="sizeAnno">{{ `${size}%` }}</span>
         <q-btn
           dense
           flat
@@ -59,41 +66,40 @@
           @click="toggleSizeLock"
         >
           <tooltipper
-            :msg="sizeLock ? `${properControllerName} size locked` : `${properControllerName} size not locked`"
+            :msg="
+              sizeLock
+                ? `${properControllerName} size locked`
+                : `${properControllerName} size not locked`
+            "
           />
         </q-btn>
         <q-space></q-space>
-        <q-btn-dropdown
-          auto-close
-          dense
-          flat
-          color="primary"
-          :icon="currentHorizontalIcon"
-          dropdown-icon
-        >
+        <div>
           <tooltipper :msg="`Row alignment is ${alignHorizontal}`" />
-          <q-btn
-            dense
-            flat
-            @click="alignHorizontal = 'flex-start'"
-            icon="mdi-format-horizontal-align-left"
-            :style="isActiveStyle(alignHorizontal == 'flex-start')"
-          />
-          <q-btn
-            dense
-            flat
-            @click="alignHorizontal = 'center'"
-            icon="mdi-format-horizontal-align-center"
-            :style="isActiveStyle(alignHorizontal == 'center')"
-          />
-          <q-btn
-            dense
-            flat
-            @click="alignHorizontal = 'flex-end'"
-            icon="mdi-format-horizontal-align-right"
-            :style="isActiveStyle(alignHorizontal == 'flex-end')"
-          />
-        </q-btn-dropdown>
+          <q-btn-dropdown auto-close dense flat :icon="currentHorizontalIcon" dropdown-icon>
+            <q-btn
+              dense
+              flat
+              @click="alignHorizontal = 'flex-start'"
+              icon="mdi-format-horizontal-align-left"
+              :style="isActiveStyle(alignHorizontal == 'flex-start')"
+            />
+            <q-btn
+              dense
+              flat
+              @click="alignHorizontal = 'center'"
+              icon="mdi-format-horizontal-align-center"
+              :style="isActiveStyle(alignHorizontal == 'center')"
+            />
+            <q-btn
+              dense
+              flat
+              @click="alignHorizontal = 'flex-end'"
+              icon="mdi-format-horizontal-align-right"
+              :style="isActiveStyle(alignHorizontal == 'flex-end')"
+            />
+          </q-btn-dropdown>
+        </div>
         <q-btn-dropdown
           v-if="showExtendedAlign"
           auto-close
@@ -126,13 +132,18 @@
           />
         </q-btn-dropdown>
         <q-btn
+          id="eye-button"
           dense
           flat
           @click="toggleHideController"
           :icon="`mdi-eye${isHiddenController ? '-off' : ''}`"
         >
           <tooltipper
-            :msg="isHiddenController ? `Auto-hide comp ${currentControllerName}s` : `Don't hide ${currentControllerName}s`"
+            :msg="
+              isHiddenController
+                ? `Auto-hide comp ${currentControllerName}s`
+                : `Don't hide ${currentControllerName}s`
+            "
           />
         </q-btn>
         <q-btn dense flat @click="toggleFlexDirection" :icon="currentDirectionIcon">
@@ -141,8 +152,11 @@
         <q-btn dense flat @click="toggleFlexReverse" icon="mdi-arrow-up-down">
           <tooltipper :msg="`${flexReverse ? 'Reversed' : 'Normal'}`" />
         </q-btn>
-        <q-btn dense flat @click="app.launchModal()" icon="mdi-settings">
+        <!-- <q-btn dense flat @click="app.launchModal()" icon="mdi-settings">
           <tooltipper msg="Open settings modal" />
+        </q-btn>-->
+        <q-btn dense flat icon="mdi-gamepad" :style="isActiveStyle(alt)" @click="toggleAlt">
+          <tooltipper msg="D-pad" />
         </q-btn>
       </q-bar>
     </q-footer>
@@ -166,23 +180,35 @@ export default {
   },
   data: () => ({
     leftDrawerOpen: false,
-    showExtendedAlign: false
+    showExtendedAlign: false,
+    showHome: true,
+    showJoy: true,
+    showSlider: false
   }),
   watch: {
     sizeLock(state) {
-      console.log(`Locked: ${state}`);
+      // console.log(`Locked: ${state}`);
     }
+  },
+  mounted() {
+    console.log("Panel");
   },
   computed: {
     ...mapGetters("settings", ["settings"]),
     app() {
       return this.$root.$children[0];
     },
+    showHeader() {
+      return this.app.showHeader;
+    },
     activeJoystick() {
       return this.app.activeJoystick.name;
     },
     activeSlider() {
       return this.app.activeSlider.name;
+    },
+    alt() {
+      return this.app.alt;
     },
     activeController() {
       if (this.$route.name == "home") return false;
@@ -314,6 +340,10 @@ export default {
         this.toggleHideSlider();
       }
     },
+    toggleAlt() {
+      this.app.alt = !this.app.alt;
+      this.app.altLocked = !this.app.altLocked;
+    },
     isActiveStyle(state) {
       return `
         color: var(--color-${state ? "selection" : "default"});
@@ -327,6 +357,11 @@ export default {
 </script>
 
 <style>
+.sizeAnno {
+  padding-left: 10px;
+  width: 50px;
+}
+
 .q-layout__section--marginal {
   user-select: none;
   cursor: default;
